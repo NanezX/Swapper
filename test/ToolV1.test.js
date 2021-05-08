@@ -19,18 +19,6 @@ describe("Transaction Router UNISWAP", ()=>{
     let signerALT;
 
     beforeEach(async ()=>{ 
-        /* Restarting the forking network at each test to a better calculate of tokens amounts obtained. This will
-        REALLY SLOOW DOWN the test :( (and I wrote several tests), but it can be checking specifily the amount of tokens 
-        obtained (that will be printed) with some prices in exchanges ETH/Token */
-        await hre.network.provider.request({
-            method: "hardhat_reset",
-            params: [{
-                forking: {
-                jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
-                blockNumber: 12391206
-                }
-            }]
-        });
         
         // 1. Deploying and setting proxy
         ToolV1 = await ethers.getContractFactory("ToolV1");
@@ -113,7 +101,7 @@ describe("Transaction Router UNISWAP", ()=>{
 
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to LINK", async ()=>{
@@ -132,7 +120,7 @@ describe("Transaction Router UNISWAP", ()=>{
 
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.003"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to UNI", async ()=>{
@@ -151,7 +139,7 @@ describe("Transaction Router UNISWAP", ()=>{
             
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.004"));
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [100,01%] (% > 1000)", async ()=>{
@@ -165,7 +153,7 @@ describe("Transaction Router UNISWAP", ()=>{
                     overrides
                 )).to.be.reverted;
             // Checking if any fee was sending to recipient
-            expect(await signerALT.getBalance()).to.equal(0);
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.004"));
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [0%] (% < 1)", async ()=>{
@@ -179,11 +167,15 @@ describe("Transaction Router UNISWAP", ()=>{
                     overrides
                 )).to.be.reverted;
             // Checking if any fee was sending to recipient
-            expect(await signerALT.getBalance()).to.equal(0);
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.004"));
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 2 tokens", ()=>{
+        before(async ()=>{
+            // This function is declared at the end.
+            await restartFork();
+        });
         it("Swapping to TWO tokens: 70% DAI and 30% USDT", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
@@ -227,7 +219,7 @@ describe("Transaction Router UNISWAP", ()=>{
 
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 45.7% DAI and 54.3% LINK", async ()=>{
@@ -250,7 +242,7 @@ describe("Transaction Router UNISWAP", ()=>{
 
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.003"));
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [40%, 70%] (% > 1000)", async ()=>{
@@ -264,11 +256,14 @@ describe("Transaction Router UNISWAP", ()=>{
                     overrides
                 )).to.be.reverted;
 
-            expect(await signerALT.getBalance()).to.equal(0);
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.003"));
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 3 tokens", ()=>{
+        before(async ()=>{
+            await restartFork();
+        });
         it("Swapping to TRHEE tokens: 40% DAI, 25% USDT and 35% LINK", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
@@ -320,7 +315,7 @@ describe("Transaction Router UNISWAP", ()=>{
 
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         }); 
         // -------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [40%, 40%, 30%] (% > 1000)", async ()=>{
@@ -333,12 +328,14 @@ describe("Transaction Router UNISWAP", ()=>{
                     [4000, 4000, 3000], // [40%, 40%, 30%]
                     overrides
                 )).to.be.reverted;
-            expect(await signerALT.getBalance()).to.equal(0);
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 4 tokens", ()=>{
-        
+        before(async ()=>{
+            await restartFork();
+        });
         it("Swapping to FOUR tokens: 30% DAI, 15% USDT, 35% LINK and 20% UNI", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
@@ -398,7 +395,7 @@ describe("Transaction Router UNISWAP", ()=>{
 
             console.log("Gas Used:", (tx.gasUsed).toString());
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         }); 
         // -------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [30%, 20%, 45%, 25%] (% > 1000)", async ()=>{
@@ -411,7 +408,23 @@ describe("Transaction Router UNISWAP", ()=>{
                     [3000, 2000, 4500, 2500], // [30%, 20%, 45%, 25%]
                     overrides
                 )).to.be.reverted;
-            expect(await signerALT.getBalance()).to.equal(0);
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
     });
 });
+
+const restartFork = async ()=>{
+     /* This will restart the forking network at each test to a better calculate of tokens amounts and ETH (fee) obtained. This will
+        REALLY SLOOW DOWN the test :( (and I wrote several tests), but it can be checking specifily the amount of tokens 
+        obtained (that will be printed) with some prices in exchanges ETH/Token. 
+       -  Remember that will be added in each test since restartFork ONLY is called between "describes" */
+    await hre.network.provider.request({
+        method: "hardhat_reset",
+        params: [{
+            forking: {
+            jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
+            blockNumber: 12391206
+            }
+        }]
+    });
+};
