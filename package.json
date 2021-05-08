@@ -17,5 +17,5 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile"
-}
+  }
 }
