@@ -1,7 +1,6 @@
 const { expect } = require("chai");
 const { ethers} = require("hardhat");
 const hre = require("hardhat");
-
 // A bunch of address tokens
 const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
@@ -23,7 +22,6 @@ describe("Transaction Router UNISWAP", ()=>{
         ToolV1 = await ethers.getContractFactory("ToolV1");
         instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
         await instanceToolV1.deployed();
-
         // 2. Impersonating my Account
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
@@ -31,7 +29,6 @@ describe("Transaction Router UNISWAP", ()=>{
         });
         // 3. Setting it as signer
         signer = await ethers.provider.getSigner(ACCOUNT);
-
         // 4. Getting some eth from a miner (because im poor)
         // - Now, Impersonate the miner Account 
         const minerAccount = '0x04668ec2f57cc15c381b461b9fedab5d451c8f7f';
@@ -46,7 +43,6 @@ describe("Transaction Router UNISWAP", ()=>{
             to: ACCOUNT,
             value: ethers.utils.parseEther('5.0'),
         });
-
         // 5. Impersonating my Alt Account (recipient account)
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
