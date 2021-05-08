@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const { ethers} = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 const hre = require("hardhat");
 // A bunch of address tokens
 const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
