@@ -16,9 +16,12 @@ describe("Transaction Router UNISWAP", ()=>{
     let ToolV1;
     let instanceToolV1;
     let signer;
+    let signerALT;
 
     beforeEach(async ()=>{ 
-        // Restarting the forking network at each test to better readability and calculability of tokens amounts
+        /* Restarting the forking network at each test to a better calculate of tokens amounts obtained. This will
+        REALLY SLOOW DOWN the test :( (and I wrote several tests), but it can be checking specifily the amount of tokens 
+        obtained (that will be printed) with some prices in exchanges ETH/Token */
         await hre.network.provider.request({
             method: "hardhat_reset",
             params: [{
@@ -28,7 +31,7 @@ describe("Transaction Router UNISWAP", ()=>{
                 }
             }]
         });
-
+        
         // 1. Deploying and setting proxy
         ToolV1 = await ethers.getContractFactory("ToolV1");
         instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
@@ -56,19 +59,27 @@ describe("Transaction Router UNISWAP", ()=>{
             to: ACCOUNT,
             value: ethers.utils.parseEther('5.0'),
         });
+
+        // 5. Impersonating my Alt Account (recipient account)
+        await hre.network.provider.request({
+            method: "hardhat_impersonateAccount",
+            params: [altAcc]
+        });
+        // - Setting it as signer
+        signerALT = await ethers.provider.getSigner(altAcc);
     });
- 
+
     describe("\n *-* CONTEXT: Swapping from ETH to one token", ()=>{
         it("Swapping to DAI", async ()=>{
-            // Overrides in ether.js is a parameter that can contain some properties of the transaction (from, to, value, ...)
-            // In my test, only contain the "value" (ETH) that the ACCOUNT will send ;)
+             /* Overrides in ether.js is a parameter that can contain some properties of the transaction (from, to, value, ...)
+             In my test, only contain the "value" (ETH) that the ACCOUNT will send ;) */
             let overrides = { 
                 // To convert Ether to Wei:
                 value: ethers.utils.parseEther("1"),
             };
-            // IMPORTANT NOTE: It's RELEVANT to know that i use bips to manage percentages.
-            // You may already know it, but 10000 bips is like 100% ; 5000 is 50% ; 10 is 0.1%; etc etc
-            // So, the input to "percentages" must be set into a range of [0 - 10000]
+            /*  IMPORTANT NOTE: It's RELEVANT to know that i use bips to manage percentages.
+             You may already know it, but 10000 bips is like 100% ; 5000 is 50% ; 10 is 0.1%; etc etc
+             So, the input to "percentages" must be set into a range of [0 - 10000] */
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
                 [DAI_ADDRESS], // Token address
                 [10000], // Percentages (10000 = 100%)
@@ -82,6 +93,8 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("\n1. Getting the balance of DAI: "+balance.toString());
             // Gas used :)
             console.log("Gas Used:", (tx.gasUsed).toString());
+            // Checking if the correct fee was sending to recipient
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to USDT", async ()=>{
@@ -97,7 +110,10 @@ describe("Transaction Router UNISWAP", ()=>{
             const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
             const balance = (await USDT_ERC20.balanceOf(ACCOUNT));
             console.log("\n1. Getting the balance of USDT: "+balance.toString());
+
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to LINK", async ()=>{
@@ -113,7 +129,10 @@ describe("Transaction Router UNISWAP", ()=>{
             const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
             const balance = (await LINK_ERC20.balanceOf(ACCOUNT));
             console.log("\n1. Getting the balance of LINK: "+balance.toString());
+
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to UNI", async ()=>{
@@ -129,12 +148,42 @@ describe("Transaction Router UNISWAP", ()=>{
             const UNI_ERC20 = await ethers.getContractAt("IERC20", UNI_ADDRESS);
             const balance = (await UNI_ERC20.balanceOf(ACCOUNT));
             console.log("\n1. Getting the balance of UNI: "+balance.toString());
+            
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+        });
+        // ------------------------------------------------------------------------
+        it("Should fail for bad percentage. Out of valid range [100,01%] (% > 1000)", async ()=>{
+            let overrides = { 
+                value: ethers.utils.parseEther("1"),
+            }
+            await expect(
+                instanceToolV1.connect(signer).swapETHForTokens(
+                    [USDT_ADDRESS],
+                    [10001], // [100,01%]
+                    overrides
+                )).to.be.reverted;
+            // Checking if any fee was sending to recipient
+            expect(await signerALT.getBalance()).to.equal(0);
+        });
+        // ------------------------------------------------------------------------
+        it("Should fail for bad percentage. Out of valid range [0%] (% < 1)", async ()=>{
+            let overrides = { 
+                value: ethers.utils.parseEther("1"),
+            }
+            await expect(
+                instanceToolV1.connect(signer).swapETHForTokens(
+                    [USDT_ADDRESS],
+                    [0], // [0%]
+                    overrides
+                )).to.be.reverted;
+            // Checking if any fee was sending to recipient
+            expect(await signerALT.getBalance()).to.equal(0);
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 2 tokens", ()=>{
-
         it("Swapping to TWO tokens: 70% DAI and 30% USDT", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
@@ -154,6 +203,8 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("2. Getting the balance of USDT: "+balance2.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 30% LINK and 70% UNI", async ()=>{
@@ -175,6 +226,8 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("2. Getting the balance of UNI: "+balance2.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 45.7% DAI and 54.3% LINK", async ()=>{
@@ -196,11 +249,26 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("2. Getting the balance of LINK: "+balance2.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+        });
+        // ------------------------------------------------------------------------
+        it("Should fail for bad percentage. Out of valid range [40%, 70%] (% > 1000)", async ()=>{
+            let overrides = { 
+                value: ethers.utils.parseEther("1"),
+            }
+            await expect(
+                instanceToolV1.connect(signer).swapETHForTokens(
+                    [LINK_ADDRESS, UNI_ADDRESS],
+                    [4000, 7000], // [40%, 70%]
+                    overrides
+                )).to.be.reverted;
+
+            expect(await signerALT.getBalance()).to.equal(0);
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 3 tokens", ()=>{
-      
         it("Swapping to TRHEE tokens: 40% DAI, 25% USDT and 35% LINK", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
@@ -224,10 +292,11 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("3. Getting the balance of LINK: "+balance3.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // -------------------------------------------------------------
-
-         it("Swapping to TRHEE tokens: 30.5% USDT, 40.3% LINK and 29.2% DAI", async ()=>{
+        it("Swapping to TRHEE tokens: 30.5% USDT, 40.3% LINK and 29.2% DAI", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
             };
@@ -250,7 +319,22 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("3. Getting the balance of DAI: "+balance1.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         }); 
+        // -------------------------------------------------------------
+        it("Should fail for bad percentage. Out of valid range [40%, 40%, 30%] (% > 1000)", async ()=>{
+            let overrides = { 
+                value: ethers.utils.parseEther("1"),
+            }
+            await expect(
+                instanceToolV1.connect(signer).swapETHForTokens(
+                    [USDT_ADDRESS, LINK_ADDRESS, DAI_ADDRESS],
+                    [4000, 4000, 3000], // [40%, 40%, 30%]
+                    overrides
+                )).to.be.reverted;
+            expect(await signerALT.getBalance()).to.equal(0);
+        });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 4 tokens", ()=>{
@@ -282,9 +366,11 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("4. Getting the balance of UNI: "+balance4.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // -------------------------------------------------------------
-         it("Swapping to FOUR tokens: 25.1% USDT, 30.3% LINK, 20.4% UNI and 24.2% DAI", async ()=>{
+        it("Swapping to FOUR tokens: 25.1% USDT, 30.3% LINK, 20.4% UNI and 24.2% DAI", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
             };
@@ -311,7 +397,21 @@ describe("Transaction Router UNISWAP", ()=>{
             console.log("4. Getting the balance of DAI: "+balance4.toString());
 
             console.log("Gas Used:", (tx.gasUsed).toString());
-        }); 
-    });
 
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
+        }); 
+        // -------------------------------------------------------------
+        it("Should fail for bad percentage. Out of valid range [30%, 20%, 45%, 25%] (% > 1000)", async ()=>{
+            let overrides = { 
+                value: ethers.utils.parseEther("1"),
+            }
+            await expect(
+                instanceToolV1.connect(signer).swapETHForTokens(
+                    [DAI_ADDRESS, USDT_ADDRESS, LINK_ADDRESS, UNI_ADDRESS],
+                    [3000, 2000, 4500, 2500], // [30%, 20%, 45%, 25%]
+                    overrides
+                )).to.be.reverted;
+            expect(await signerALT.getBalance()).to.equal(0);
+        });
+    });
 });
