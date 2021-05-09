@@ -12,10 +12,11 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.1.0",
     "@openzeppelin/contracts-upgradeable": "^4.1.0",
-    "@uniswap/v2-periphery": "*"
+    "@uniswap/v2-periphery": "*",
+    "node-fetch": "^2.6.1"
   },
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile"
-}
+  }
 }

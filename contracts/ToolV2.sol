@@ -3,11 +3,8 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "./interfaces/IBalancePool.sol";
 // Balancer Exchange Proxy: 0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21
-interface PoolInterface {
-    function swapExactAmountIn(address, uint, address, uint, uint) external returns (uint, uint);
-    function swapExactAmountOut(address, uint, address, uint, uint) external returns (uint, uint);
-}
 
 contract ToolV2 is Initializable{
     address payable recipient; // Recipient that get the fees
@@ -20,7 +17,9 @@ contract ToolV2 is Initializable{
         address[] memory AddressesTokensOut,
         uint[] memory percentageTokens,
         bool[] memory dex  // True to Uniswap, False to Balancer
-        ) external payable {
+    )
+    external 
+    payable {
 
         require(msg.value > 0);
         uint addIt;
@@ -30,7 +29,7 @@ contract ToolV2 is Initializable{
         require(addIt>0 && addIt<=10000, "Bad percentage parameters");
         
         IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-        PoolInterface balancer = PoolInterface(0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21);
+        IBalancePool balancer = IBalancePool(0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21);
 
         uint fee = (msg.value*10)/10000; 
         uint amountETH = msg.value - fee;
@@ -50,7 +49,8 @@ contract ToolV2 is Initializable{
         IUniswapV2Router02 _uniswap, 
         uint _amountInETH, 
         address _addressToken
-        ) internal {
+    ) 
+    internal {
 
         address[] memory path = new address[](2); 
         path[0] = _uniswap.WETH(); 

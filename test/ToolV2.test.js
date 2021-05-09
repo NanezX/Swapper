@@ -1,11 +1,13 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
+const fetch = require("node-fetch");
 const hre = require("hardhat");
 // A bunch of address tokens
 const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const LINK_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 const UNI_ADDRESS = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984";
+const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
 const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account will make transactions
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
@@ -18,7 +20,10 @@ describe("Transaction v2", ()=>{
     let toolUpgraded;
     let signer;
     let signerALT;
-    
+    // To API
+    let response;
+    let data;
+  /*  
     beforeEach(async ()=>{ 
         // Deploying
         ToolV1 = await ethers.getContractFactory("ToolV1");
@@ -51,28 +56,21 @@ describe("Transaction v2", ()=>{
         });
         signerALT = await ethers.provider.getSigner(altAcc);
     });
-
-    describe("\n *-* CONTEXT: Swapping from ETH to one token", ()=>{
-        it("Swapping to DAI", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
-            };
-            let tx = await toolUpgraded.connect(signer).swapETHForTokens(
-                [DAI_ADDRESS],
-                [10000],
-                [true],
-                overrides
-            ); 
-            tx = await tx.wait();     
+*/
+    describe("\n *-* CONTEXT: Checking api", ()=>{
+// -----------------------------------------------
+        it("Using the api with 1 token", async ()=>{
+            response = await fetch('https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&toTokenAddress=0x514910771AF9Ca656af840dff83E8264EcF986CA&amount=10000000000000000&protocols=UNISWAP_V2,BALANCER,WETH');
+            data = await response.json();
+            // Checking and choosing ONLY for toTokenAmount.
+            if (data.protocols[0][1][0].name == 'UNISWAP_V2'){
+                console.log()
+            }
             
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance.toString());
 
-            console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
+
+        
     });
 
 });
