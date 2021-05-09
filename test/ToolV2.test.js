@@ -75,7 +75,7 @@ describe("Transaction v2", ()=>{
             for(let i=0; i< amountTypestokens;i++){
                 response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${ethers.utils.parseEther("0.999")}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
-                dexs[i] =setDex(data);
+                dexs[i] =false;
             }
             let overrides = { 
                 value: amountETH,
