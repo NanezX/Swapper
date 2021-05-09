@@ -35,9 +35,9 @@
         }
       }
     },
-    "05dfbf9b6c45c9a2dcb831d931021ead23ec7c81511e7bee04ccbbf183653dd4": {
+    "b29e76c24458c1cd606d9ecb4faa89e0feae4a924dc495a7773bffd3658e2414": {
       "address": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
-      "txHash": "0xe4462952659873c580cdcc7d00dc4046af1dd12f3bb852d0e545d9df12f9e58c",
+      "txHash": "0x2d395e175102e32d86b54f8da3f43cac7b759d5ff0c69e49bbbf7fc56bdb68b0",
       "layout": {
         "storage": [
           {

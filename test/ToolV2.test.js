@@ -73,9 +73,9 @@ describe("Transaction v2", ()=>{
             let amountETH = ethers.utils.parseEther("1");
             // Checking and choosing between Uniswap and Balancer.
             for(let i=0; i< amountTypestokens;i++){
-                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${ethers.utils.parseEther("0.999")}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
-                dexs[i] =false;
+                dexs[i] =setDex(data);
             }
             let overrides = { 
                 value: amountETH,

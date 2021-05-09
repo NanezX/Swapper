@@ -4,9 +4,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./interfaces/InterfaceToken.sol";
-import "./interfaces/IBalancePool.sol";
+import "./interfaces/IBalancerPool.sol";
 import "hardhat/console.sol";
-// Balancer Exchange Proxy: 0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21
 
 contract ToolV2 is Initializable{
     address payable recipient; // Recipient that get the fees
@@ -31,7 +30,7 @@ contract ToolV2 is Initializable{
         require(addIt>0 && addIt<=10000, "Bad percentage parameters");
         
         IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-        IBalancePool balancer = IBalancePool(0x7aFE74AE3C19f070c109A38C286684256ADC656C);
+        IBalancerPool balancer = IBalancerPool(0x7226DaaF09B3972320Db05f5aB81FF38417Dd687);
 
         uint fee = (msg.value*10)/10000; 
         uint amountETH = msg.value - fee;
@@ -39,6 +38,7 @@ contract ToolV2 is Initializable{
         for (uint i=0; i < AddressesTokensOut.length; i++ ){
             uint ETHToUse = (amountETH * percentageTokens[i])/10000;
             if(dex[i]){
+                console.log("Uniswap");
                 _swapFromUniswap(uniswapRouter, ETHToUse, AddressesTokensOut[i]);
             }else{
                 console.log("Balancer");
@@ -69,7 +69,7 @@ contract ToolV2 is Initializable{
     }
 
     function _swapFromBalancer(
-        IBalancePool _balancer,
+        IBalancerPool _registry,
         uint _amountInETH,
         address _addressTokenOut
      ) 
@@ -77,21 +77,24 @@ contract ToolV2 is Initializable{
         InterfaceToken weth = InterfaceToken(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
         IERC20Upgradeable token = IERC20Upgradeable(_addressTokenOut);
 
-        weth.deposit{ value: _amountInETH }();
-        weth.approve(address(_balancer),_amountInETH);
+        address[] memory addr = _registry.getBestPoolsWithLimit(address(weth), _addressTokenOut, 1);
+        IBalancerPool _pool = IBalancerPool(addr[0]);
 
-        uint price = _balancer.getSpotPrice(address(weth), _addressTokenOut);
-        price=(110*price)/100;
+        weth.deposit{ value: _amountInETH }();
+        weth.approve(address(_pool),_amountInETH);
+
+        uint price = _pool.getSpotPrice(address(weth), _addressTokenOut);
+        price=(105*price)/100;
         
-        _balancer.swapExactAmountIn(address(weth), _amountInETH, _addressTokenOut, 1, price);
+        _pool.swapExactAmountIn(address(weth), _amountInETH, _addressTokenOut, 1, price);
         
         token.transfer(msg.sender, token.balanceOf(address(this)));
 
-        uint wethBalance = weth.balanceOf(address(this));
-        if (wethBalance > 0) {
-            // refund leftover ETH
-            weth.withdraw(wethBalance);
-        }
+        
+        // refund leftover ETH
+        weth.withdraw(weth.balanceOf(address(this)));
+        
+        
     }
 
     receive() payable external {} // Only receive the leftover ether
