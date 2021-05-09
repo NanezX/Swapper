@@ -13,25 +13,21 @@ const ALCHEMY_KEY = "7rjyfJ9o5dWSND5dUhl1sfFjQpG24BlV";
 
 describe("Transaction v2", ()=>{
     let ToolV1;
+    let ToolV2;
     let instanceToolV1;
+    let toolUpgraded;
     let signer;
     let signerALT;
-    let ToolV2;
-    let toolUpgraded;
-
+    
     beforeEach(async ()=>{ 
         // Deploying
         ToolV1 = await ethers.getContractFactory("ToolV1");
         ToolV2 = await ethers.getContractFactory("ToolV2");
 
-        instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
-        
-        await instanceToolV1.deployed();
-
         // Upgrading
-        
+        instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
         toolUpgraded = await upgrades.upgradeProxy(instanceToolV1.address, ToolV2);
- 
+        
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
             params: [ACCOUNT]
@@ -65,7 +61,7 @@ describe("Transaction v2", ()=>{
                 [DAI_ADDRESS],
                 [10000],
                 [true],
-                overrides 
+                overrides
             ); 
             tx = await tx.wait();     
             

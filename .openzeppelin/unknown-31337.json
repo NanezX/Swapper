@@ -34,6 +34,40 @@
           }
         }
       }
+    },
+    "263ddc1b21a7ae1b2082017acdb37657a8185bd91ea2461162ee7e23f7bebdac": {
+      "address": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
+      "txHash": "0x0ddbef2c13e615791542136a5302b718ad569dfcdb72756029469096fd0cc01b",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:23"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:28"
+          },
+          {
+            "contract": "ToolV2",
+            "label": "recipient",
+            "type": "t_address_payable",
+            "src": "contracts\\ToolV2.sol:13"
+          }
+        ],
+        "types": {
+          "t_address_payable": {
+            "label": "address payable"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
     }
   },
   "proxies": [
