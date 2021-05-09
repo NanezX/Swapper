@@ -15,8 +15,10 @@ contract ToolV1 is Initializable{
     function swapETHForTokens (
         address[] memory AddressesTokensOut, // Token addresses that are requested 
         uint[] memory percentageTokens    // Token Percentages that are requested 
-    ) external payable {
-            require(msg.value>0);
+    ) 
+    external 
+    payable {
+            require(msg.value > 0);
             uint addIt;
             for(uint i=0; i < percentageTokens.length; i++ ){
                 addIt+=percentageTokens[i]; // Adding to AddIt to check if percentages are corrects
