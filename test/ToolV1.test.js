@@ -21,7 +21,8 @@ describe("Transaction Router UNISWAP", ()=>{
         // 1. Deploying and setting proxy
         ToolV1 = await ethers.getContractFactory("ToolV1");
         instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
-        await instanceToolV1.deployed();
+        
+
         // 2. Impersonating my Account
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
