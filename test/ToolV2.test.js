@@ -7,7 +7,7 @@ const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const LINK_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 const UNI_ADDRESS = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984";
-const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account will make transactions
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
@@ -61,12 +61,12 @@ describe("Transaction v2", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n *-* CONTEXT: Checking api", ()=>{
+    describe("\n *-* CONTEXT: Checking between two DEXs [Uniswap V2 and Balancer]", ()=>{
 // -----------------------------------------------
         amountTypestokens=1;
         it("Using the api with 1 token", async ()=>{
             // Arrays
-            const tokenAddress = [USDT_ADDRESS];
+            const tokenAddress = [DAI_ADDRESS];
             const tokenPercentage = [10000];
             const dexs = new Array(amountTypestokens);
 
@@ -75,20 +75,26 @@ describe("Transaction v2", ()=>{
             for(let i=0; i< amountTypestokens;i++){
                 response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
-                dexs[i] = setDex(data);
+                dexs[i] =false;
             }
-            // let overrides = { 
-            //     value: amountETH,
-            // };
+            let overrides = { 
+                value: amountETH,
+            };
             let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
                 tokenAddress,
                 tokenPercentage,
                 dexs,
-                { 
-                    value: amountETH,
-                }
+                overrides
             ); 
             tx = await tx.wait();  
+
+            const USDT_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
+            const balance = (await USDT_ERC20.balanceOf(ACCOUNT));
+            console.log("\n1. Getting the balance of DAI: "+balance.toString());
+
+            console.log("Gas Used:", (tx.gasUsed).toString());
+
+            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
 
            
 
@@ -107,3 +113,4 @@ function setDex(_data){
         return false;
     }
 }
+

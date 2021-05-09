@@ -39,12 +39,10 @@ contract ToolV1 is Initializable{
 
                 // Calculating % of Eth to send on this iteration. (Amount available * percentage that is requested) / Base percent
                 uint amountInETH = (amountETH * percentageTokens[i])/10000;
-                // Calculating the amount of this tokens that will received with this ETH amount (amountInETH)
-                uint[] memory amounts = uniswapRouter.getAmountsOut(amountInETH, path);
 
                 // make the exchange
-                uniswapRouter.swapETHForExactTokens{value:  amountInETH}(
-                    amounts [1], // Using amounts[1] because they are only 2 addresses in the PATH, and the last is the token requested
+                uniswapRouter.swapExactETHForTokens{value:  amountInETH}(
+                    1,
                     path, 
                     msg.sender, 
                     block.timestamp + 3600
