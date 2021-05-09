@@ -96,8 +96,6 @@ describe("Transaction v2", ()=>{
 
             expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
 
-           
-
         });
 
         

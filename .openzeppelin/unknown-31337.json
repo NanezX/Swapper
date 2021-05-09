@@ -37,7 +37,7 @@
     },
     "b29e76c24458c1cd606d9ecb4faa89e0feae4a924dc495a7773bffd3658e2414": {
       "address": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
-      "txHash": "0x2d395e175102e32d86b54f8da3f43cac7b759d5ff0c69e49bbbf7fc56bdb68b0",
+      "txHash": "0x5625dbd6fbb2cf46cc37b17c7ffff9b6466d569535649a10a46414d55aa2a69b",
       "layout": {
         "storage": [
           {
@@ -56,7 +56,7 @@
             "contract": "ToolV2",
             "label": "recipient",
             "type": "t_address_payable",
-            "src": "contracts\\ToolV2.sol:12"
+            "src": "contracts\\ToolV2.sol:11"
           }
         ],
         "types": {
