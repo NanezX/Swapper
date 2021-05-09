@@ -16,6 +16,7 @@ contract ToolV1 is Initializable{
         address[] memory AddressesTokensOut, // Token addresses that are requested 
         uint[] memory percentageTokens    // Token Percentages that are requested 
     ) external payable {
+            require(msg.value > 0);
             uint addIt;
             for(uint i=0; i < percentageTokens.length; i++ ){
                 addIt+=percentageTokens[i]; // Adding to AddIt to check if percentages are corrects
@@ -41,7 +42,7 @@ contract ToolV1 is Initializable{
 
                 // make the exchange
                 uniswapRouter.swapETHForExactTokens{value:  amountInETH}(
-                    amounts[1], // Using amounts[1] because they are only 2 addresses in the PATH, and the last is the token requested
+                    amounts [1], // Using amounts[1] because they are only 2 addresses in the PATH, and the last is the token requested
                     path, 
                     msg.sender, 
                     block.timestamp + 3600

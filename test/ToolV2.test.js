@@ -16,18 +16,21 @@ describe("Transaction v2", ()=>{
     let instanceToolV1;
     let signer;
     let signerALT;
+    let ToolV2;
+    let toolUpgraded;
 
     beforeEach(async ()=>{ 
         // Deploying
         ToolV1 = await ethers.getContractFactory("ToolV1");
+        ToolV2 = await ethers.getContractFactory("ToolV2");
+
         instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
+        
         await instanceToolV1.deployed();
 
         // Upgrading
-        const ToolV2 = await ethers.getContractFactory("ToolV2");
-        const instanceUpgraded = await upgrades.upgradeProxy( instanceToolV.address, ToolV2);
-
-
+        
+        toolUpgraded = await upgrades.upgradeProxy(instanceToolV1.address, ToolV2);
  
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
@@ -53,37 +56,27 @@ describe("Transaction v2", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n *-* CONTEXT v2: Swapping from ETH to one token", ()=>{
-        before(async()=>{
-            await restartFork();
-        });
-        it("Swapping to DAI v2", async ()=>{
+    describe("\n *-* CONTEXT: Swapping from ETH to one token", ()=>{
+        it("Swapping to DAI", async ()=>{
             let overrides = { 
                 value: ethers.utils.parseEther("1"),
             };
-            let tx = await instanceToolV1.connect(signer).swapETHForTokens(
+            let tx = await toolUpgraded.connect(signer).swapETHForTokens(
                 [DAI_ADDRESS],
                 [10000],
+                [true],
                 overrides 
-            );  
-            tx = await tx.wait();    
-
+            ); 
+            tx = await tx.wait();     
+            
             const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
             const balance = (await DAI_ERC20.balanceOf(ACCOUNT));
             console.log("\n1. Getting the balance of DAI: "+balance.toString());
+
             console.log("Gas Used:", (tx.gasUsed).toString());
+
             expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
     });
+
 });
-const restartFork = async ()=>{
-   await hre.network.provider.request({
-       method: "hardhat_reset",
-       params: [{
-           forking: {
-           jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
-           blockNumber: 12391206
-           }
-       }]
-   });
-};
