@@ -17,13 +17,17 @@ describe("Transaction v2", ()=>{
     let ToolV1;
     let ToolV2;
     let instanceToolV1;
-    let toolUpgraded;
+    let toolUpgradedV2;
     let signer;
     let signerALT;
+
     // To API
     let response;
     let data;
-  /*  
+    let urlBase = `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&`;
+    let amountTypestokens;
+    
+
     beforeEach(async ()=>{ 
         // Deploying
         ToolV1 = await ethers.getContractFactory("ToolV1");
@@ -31,7 +35,7 @@ describe("Transaction v2", ()=>{
 
         // Upgrading
         instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
-        toolUpgraded = await upgrades.upgradeProxy(instanceToolV1.address, ToolV2);
+        toolUpgradedV2 = await upgrades.upgradeProxy(instanceToolV1.address, ToolV2);
         
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
@@ -56,17 +60,37 @@ describe("Transaction v2", ()=>{
         });
         signerALT = await ethers.provider.getSigner(altAcc);
     });
-*/
+
     describe("\n *-* CONTEXT: Checking api", ()=>{
 // -----------------------------------------------
+        amountTypestokens=1;
         it("Using the api with 1 token", async ()=>{
-            response = await fetch('https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&toTokenAddress=0x514910771AF9Ca656af840dff83E8264EcF986CA&amount=10000000000000000&protocols=UNISWAP_V2,BALANCER,WETH');
-            data = await response.json();
-            // Checking and choosing ONLY for toTokenAmount.
-            if (data.protocols[0][1][0].name == 'UNISWAP_V2'){
-                console.log()
+            // Arrays
+            const tokenAddress = [USDT_ADDRESS];
+            const tokenPercentage = [10000];
+            const dexs = new Array(amountTypestokens);
+
+            let amountETH = ethers.utils.parseEther("1");
+            // Checking and choosing between Uniswap and Balancer.
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
+                data = await response.json();
+                dexs[i] = setDex(data);
             }
-            
+            // let overrides = { 
+            //     value: amountETH,
+            // };
+            let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
+                tokenAddress,
+                tokenPercentage,
+                dexs,
+                { 
+                    value: amountETH,
+                }
+            ); 
+            tx = await tx.wait();  
+
+           
 
         });
 
@@ -74,3 +98,12 @@ describe("Transaction v2", ()=>{
     });
 
 });
+function setDex(_data){
+    if (_data.protocols[0][1][0].name == 'UNISWAP_V2'){
+        // Return true, this will be Uniswap
+        return true; 
+    }else{
+        // Return false, because i only set Uniswap and Balancer as Protocols
+        return false;
+    }
+}

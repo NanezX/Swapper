@@ -17,9 +17,9 @@ contract ToolV2 is Initializable{
         address[] memory AddressesTokensOut,
         uint[] memory percentageTokens,
         bool[] memory dex  // True to Uniswap, False to Balancer
-    )
-    external 
-    payable {
+     )
+     external 
+     payable {
 
         require(msg.value > 0);
         uint addIt;
@@ -35,10 +35,11 @@ contract ToolV2 is Initializable{
         uint amountETH = msg.value - fee;
 
         for (uint i=0; i < AddressesTokensOut.length; i++ ){
-
             uint ETHToUse = (amountETH * percentageTokens[i])/10000;
             if(dex[i]){
                 _swapFromUniswap(uniswapRouter, ETHToUse, AddressesTokensOut[i]);
+            }else{
+                // balancer
             }
         }
         recipient.call{value: fee}(""); // transfer fee to my recipient 
@@ -49,8 +50,8 @@ contract ToolV2 is Initializable{
         IUniswapV2Router02 _uniswap, 
         uint _amountInETH, 
         address _addressToken
-    ) 
-    internal {
+     ) 
+     internal {
 
         address[] memory path = new address[](2); 
         path[0] = _uniswap.WETH(); 
