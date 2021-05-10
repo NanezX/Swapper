@@ -13,7 +13,7 @@ const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account wi
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
 const ALCHEMY_KEY = "7rjyfJ9o5dWSND5dUhl1sfFjQpG24BlV";
 
-describe("Transaction: Tool V2", ()=>{
+describe("*** Transaction: Tool V2", ()=>{
     let ToolV1;
     let ToolV2;
     let instanceToolV1;
@@ -61,7 +61,7 @@ describe("Transaction: Tool V2", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n *-* CONTEXT: ONE token - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n - CONTEXT: ONE token - Checking between Uniswap V2 and Balancer", ()=>{
 // -----------------------------------------------
         it("Swapping to DAI", async ()=>{
             const tokenAddress = [DAI_ADDRESS];
@@ -91,13 +91,13 @@ describe("Transaction: Tool V2", ()=>{
             tx = await tx.wait();  
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-            console.log("Gas Used:", (tx.gasUsed).toString());
+            console.log("       Gas Used:", (tx.gasUsed).toString());
         });
 
         
     });
 
-    describe("\n *-* CONTEXT: TWO tokens - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n - CONTEXT: TWO tokens - Checking between Uniswap V2 and Balancer", ()=>{
         before(async ()=>{
             amountTypestokens++;
         });
@@ -130,11 +130,11 @@ describe("Transaction: Tool V2", ()=>{
             tx = await tx.wait();  
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-            console.log("Gas Used:", (tx.gasUsed).toString());
+            console.log("       Gas Used:", (tx.gasUsed).toString());
         });
     });
 
-    describe("\n *-* CONTEXT: THEE tokens - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n - CONTEXT: THEE tokens - Checking between Uniswap V2 and Balancer", ()=>{
         before(async ()=>{
             amountTypestokens++;
         });
@@ -167,7 +167,7 @@ describe("Transaction: Tool V2", ()=>{
             tx = await tx.wait();  
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-            console.log("Gas Used:", (tx.gasUsed).toString());
+            console.log("       Gas Used:", (tx.gasUsed).toString());
         });
     });
 
@@ -189,7 +189,7 @@ async function printResult(_datas, _addresses, _amountTypes){
         decimals = Math.pow(10,(decimals));
         const Token_ERC20 = await ethers.getContractAt("IERC20", _addresses[i]);
         const balance = (await Token_ERC20.balanceOf(ACCOUNT));
-        console.log(`${i==0 ? "\n" : "" }${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
+        console.log(`${i==0 ? "\n" : "" }       ${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
     }
 }
 
