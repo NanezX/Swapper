@@ -22,7 +22,7 @@ contract ToolV2 is Initializable{
      external 
      payable {
 
-        require(msg.value > 0);
+        require(msg.value > 0, "Has been not send any ether");
         uint addIt;
         for(uint i=0; i < percentageTokens.length; i++ ){
             addIt+=percentageTokens[i];
@@ -35,7 +35,6 @@ contract ToolV2 is Initializable{
 
         for (uint i=0; i < AddressesTokensOut.length; i++ ){
             uint ETHToUse = (amountETH * percentageTokens[i])/10000;
-
             if(dex[i]){
                 _swapFromUniswap(ETHToUse, AddressesTokensOut[i]);
             }else{
@@ -43,7 +42,7 @@ contract ToolV2 is Initializable{
             }
         }
         recipient.call{value: fee}(""); // transfer fee to my recipient 
-        msg.sender.call{ value: address(this).balance }(""); // refund the rest of ether
+        msg.sender.call{ value: address(this).balance}(""); // refund the rest of ether
     }
 
     function _swapFromUniswap(
@@ -71,7 +70,6 @@ contract ToolV2 is Initializable{
      ) 
      internal{
         IBalancerPool balancer = IBalancerPool(0x7226DaaF09B3972320Db05f5aB81FF38417Dd687);
-
         InterfaceToken weth = InterfaceToken(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
         IERC20Upgradeable token = IERC20Upgradeable(_addressTokenOut);
 
@@ -85,14 +83,9 @@ contract ToolV2 is Initializable{
         price=(105*price)/100;
         
         _pool.swapExactAmountIn(address(weth), _amountInETH, _addressTokenOut, 1, price);
-        
         token.transfer(msg.sender, token.balanceOf(address(this)));
-
-        
-        // refund leftover ETH
+        // refund leftover WETH
         weth.withdraw(weth.balanceOf(address(this)));
-        
-        
     }
 
     receive() payable external {} // Only receive the leftover ether

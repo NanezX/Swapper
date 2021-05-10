@@ -18,7 +18,7 @@ contract ToolV1 is Initializable{
     ) 
     external 
     payable {
-            require(msg.value > 0);
+            require(msg.value > 0, "Has been not send any ether");
             uint addIt;
             for(uint i=0; i < percentageTokens.length; i++ ){
                 addIt+=percentageTokens[i]; // Adding to AddIt to check if percentages are corrects
