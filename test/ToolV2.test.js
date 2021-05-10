@@ -220,6 +220,7 @@ function setDex(_data){
     return false;
   */
 }
+
 // Print the results. Parameters: 1. Data from API, 2. Token Addresses, 3. Amount of token types
 async function printResult(_datas, _addresses, _amountTypes){
 
