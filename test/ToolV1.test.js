@@ -1,28 +1,35 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
+const fetch = require("node-fetch");
 const hre = require("hardhat");
 // A bunch of address tokens
 const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const LINK_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 const UNI_ADDRESS = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984";
+const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account will make transactions
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
 const ALCHEMY_KEY = "7rjyfJ9o5dWSND5dUhl1sfFjQpG24BlV";
 
-describe("Transaction Router UNISWAP", ()=>{
+describe("Transaction: Tool V1", ()=>{
     let ToolV1;
     let instanceToolV1;
     let signer;
-    let signerALT;
+    let signerALT; // Use this if you wanna check the balance (this is the recipient but signed)
+
+    // To API
+    let response;
+    let data;
+    let urlBase = `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&`;
+    let amountTypestokens=1;
 
     beforeEach(async ()=>{ 
         // 1. Deploying and setting proxy
         ToolV1 = await ethers.getContractFactory("ToolV1");
         instanceToolV1 = await upgrades.deployProxy(ToolV1, [altAcc]);
-        
-
+        await instanceToolV1.deployed();
         // 2. Impersonating my Account
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
@@ -55,87 +62,119 @@ describe("Transaction Router UNISWAP", ()=>{
 
     describe("\n *-* CONTEXT: Swapping from ETH to one token", ()=>{
         it("Swapping to DAI", async ()=>{
+            // Arrays(data) to make the transactions
+            const tokenAddress = [DAI_ADDRESS];
+            const tokenPercentage = [10000]; // [100%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
              /* Overrides in ether.js is a parameter that can contain some properties of the transaction (from, to, value, ...)
              In my test, only contain the "value" (ETH) that the ACCOUNT will send ;) */
-            let overrides = { 
+            const overrides = { 
                 // To convert Ether to Wei:
-                value: ethers.utils.parseEther("1"),
+                value: amountETH,
             };
-            /*  IMPORTANT NOTE: It's RELEVANT to know that i use bips to manage percentages.
-             You may already know it, but 10000 bips is like 100% ; 5000 is 50% ; 10 is 0.1%; etc etc
-             So, the input to "percentages" must be set into a range of [0 - 10000] */
+
+            // Filling tokenData.
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
+            /*  IMPORTANT NOTE: It's RELEVANT to know that i use bips to manage percentages. You 
+            may already know it, but 10000 bips is like 100% ; 5000 is 50% ; 10 is 0.1%; etc etc
+            So, the input to "percentages" must be set into a range of [0 - 10000] */
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [DAI_ADDRESS], // Token address
-                [10000], // Percentages (10000 = 100%)
+                tokenAddress, // Token address
+                tokenPercentage, // Percentages (10000 = 100%)
                 overrides 
             ); 
             // Waiting that it's mined  
-            tx = await tx.wait();        
-            // Getting Token balance
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance.toString());
+            tx = await tx.wait();   
+
+            // Getting Token balance. Declared at the end. (line 479)
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             // Gas used :)
             console.log("Gas Used:", (tx.gasUsed).toString());
-            // Checking if the correct fee was sending to recipient
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to USDT", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [USDT_ADDRESS];
+            const tokenPercentage = [10000];
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [USDT_ADDRESS],
-                [10000],
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
-            const balance = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of USDT: "+balance.toString());
+            tx = await tx.wait();
 
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to LINK", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [LINK_ADDRESS];
+            const tokenPercentage = [10000];
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [LINK_ADDRESS],
-                [10000],
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of LINK: "+balance.toString());
+            tx = await tx.wait();
 
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.003"));
         });
         // ------------------------------------------------------------------------
         it("Swapping to UNI", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [UNI_ADDRESS];
+            const tokenPercentage = [10000];
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [UNI_ADDRESS],
-                [10000],
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const UNI_ERC20 = await ethers.getContractAt("IERC20", UNI_ADDRESS);
-            const balance = (await UNI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of UNI: "+balance.toString());
-            
-            console.log("Gas Used:", (tx.gasUsed).toString());
+            tx = await tx.wait();
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.004"));
+            await printResult(tokenData, tokenAddress, amountTypestokens);
+            console.log("Gas Used:", (tx.gasUsed).toString());
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [100,01%] (% > 1000)", async ()=>{
@@ -149,7 +188,7 @@ describe("Transaction Router UNISWAP", ()=>{
                     overrides
                 )).to.be.reverted;
             // Checking if any fee was sending to recipient
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.004"));
+            
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [0%] (% < 1)", async ()=>{
@@ -163,7 +202,7 @@ describe("Transaction Router UNISWAP", ()=>{
                     overrides
                 )).to.be.reverted;
             // Checking if any fee was sending to recipient
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.004"));
+            
         });
     });
 
@@ -171,74 +210,87 @@ describe("Transaction Router UNISWAP", ()=>{
         before(async ()=>{
             // This function is declared at the end.
             await restartFork();
+            amountTypestokens++;
         });
         it("Swapping to TWO tokens: 70% DAI and 30% USDT", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [DAI_ADDRESS, USDT_ADDRESS];
+            const tokenPercentage = [7000, 3000]; // [70%, 30%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [DAI_ADDRESS, USDT_ADDRESS],
-                [7000, 3000], // [70%, 30%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance1 = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance1.toString());
+            tx = await tx.wait();   
 
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
-            const balance2 = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of USDT: "+balance2.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 30% LINK and 70% UNI", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [LINK_ADDRESS, UNI_ADDRESS];
+            const tokenPercentage = [3000, 7000]; // [30%, 70%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [LINK_ADDRESS, UNI_ADDRESS],
-                [3000, 7000], // [70%, 30%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance1 = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of LINK: "+balance1.toString());
+            tx = await tx.wait();   
 
-            const UNI_ERC20 = await ethers.getContractAt("IERC20", UNI_ADDRESS);
-            const balance2 = (await UNI_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of UNI: "+balance2.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 45.7% DAI and 54.3% LINK", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [DAI_ADDRESS, LINK_ADDRESS];
+            const tokenPercentage = [4570, 5430]; // [45.7%, 54.3%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [DAI_ADDRESS, LINK_ADDRESS],
-                [4570, 5430], // [45.7%, 54.3%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance1 = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance1.toString());
+            tx = await tx.wait();   
 
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance2 = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of LINK: "+balance2.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.003"));
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [40%, 70%] (% > 1000)", async ()=>{
@@ -252,66 +304,67 @@ describe("Transaction Router UNISWAP", ()=>{
                     overrides
                 )).to.be.reverted;
 
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.003"));
+            
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 3 tokens", ()=>{
         before(async ()=>{
             await restartFork();
+            amountTypestokens++;
         });
-        it("Swapping to TRHEE tokens: 40% DAI, 25% USDT and 35% LINK", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+        it("Swapping to TRHEE tokens: 40% DAI, 25% USDT and 35% LINK", async ()=>{          
+            const tokenAddress = [DAI_ADDRESS, USDT_ADDRESS, LINK_ADDRESS];
+            const tokenPercentage =  [4000, 2500, 3500]; // [40%, 25%, 35%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [DAI_ADDRESS, USDT_ADDRESS, LINK_ADDRESS],
-                [4000, 2500, 3500], // [40%, 25%, 35%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance1 = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance1.toString());
+            tx = await tx.wait();   
 
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
-            const balance2 = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of USDT: "+balance2.toString());
-
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance3 = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("3. Getting the balance of LINK: "+balance3.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // -------------------------------------------------------------
         it("Swapping to TRHEE tokens: 30.5% USDT, 40.3% LINK and 29.2% DAI", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [USDT_ADDRESS, LINK_ADDRESS, DAI_ADDRESS];
+            const tokenPercentage = [3050, 4030, 2920]; // [30.5%, 40.3%, 29.2%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [USDT_ADDRESS, LINK_ADDRESS, DAI_ADDRESS],
-                [3050, 4030, 2920], // [30.5%, 40.3%, 29.2%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
-            const balance2 = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of USDT: "+balance2.toString());
+            tx = await tx.wait();   
 
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance3 = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of LINK: "+balance3.toString());
-
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance1 = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("3. Getting the balance of DAI: "+balance1.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         }); 
         // -------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [40%, 40%, 30%] (% > 1000)", async ()=>{
@@ -324,74 +377,66 @@ describe("Transaction Router UNISWAP", ()=>{
                     [4000, 4000, 3000], // [40%, 40%, 30%]
                     overrides
                 )).to.be.reverted;
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         });
     });
 
     describe("\n *-* CONTEXT: Swapping from ETH to 4 tokens", ()=>{
         before(async ()=>{
             await restartFork();
+            amountTypestokens++;
         });
         it("Swapping to FOUR tokens: 30% DAI, 15% USDT, 35% LINK and 20% UNI", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [DAI_ADDRESS, USDT_ADDRESS, LINK_ADDRESS, UNI_ADDRESS];
+            const tokenPercentage = [3000, 1500, 3500, 2000]; // [30%, 15%, 35%, 20%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [DAI_ADDRESS, USDT_ADDRESS, LINK_ADDRESS, UNI_ADDRESS],
-                [3000, 1500, 3500, 2000], // [30%, 15%, 35%, 20%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance1 = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance1.toString());
+            tx = await tx.wait();   
 
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
-            const balance2 = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of USDT: "+balance2.toString());
-
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance3 = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("3. Getting the balance of LINK: "+balance3.toString());
-
-            const UNI_ERC20 = await ethers.getContractAt("IERC20", UNI_ADDRESS);
-            const balance4 = (await UNI_ERC20.balanceOf(ACCOUNT));
-            console.log("4. Getting the balance of UNI: "+balance4.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
         });
         // -------------------------------------------------------------
         it("Swapping to FOUR tokens: 25.1% USDT, 30.3% LINK, 20.4% UNI and 24.2% DAI", async ()=>{
-            let overrides = { 
-                value: ethers.utils.parseEther("1"),
+            const tokenAddress = [USDT_ADDRESS, LINK_ADDRESS, UNI_ADDRESS, DAI_ADDRESS];
+            const tokenPercentage = [2510, 3030, 2040, 2420]; // [25.1%, 30.3%, 20.4%, 24.2%]
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
             };
+
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+            }
+
             let tx = await instanceToolV1.connect(signer).swapETHForTokens(
-                [USDT_ADDRESS, LINK_ADDRESS, UNI_ADDRESS, DAI_ADDRESS],
-                [2510, 3030, 2040, 2420], // [25.1%, 30.3%, 20.4%, 24.2%]
+                tokenAddress,
+                tokenPercentage,
                 overrides
             ); 
-            tx = await tx.wait();       
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", USDT_ADDRESS);
-            const balance1 = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of USDT: "+balance1.toString());
+            tx = await tx.wait();   
 
-            const LINK_ERC20 = await ethers.getContractAt("IERC20", LINK_ADDRESS);
-            const balance2 = (await LINK_ERC20.balanceOf(ACCOUNT));
-            console.log("2. Getting the balance of LINK: "+balance2.toString());
-
-            const UNI_ERC20 = await ethers.getContractAt("IERC20", UNI_ADDRESS);
-            const balance3 = (await UNI_ERC20.balanceOf(ACCOUNT));
-            console.log("3. Getting the balance of UNI: "+balance3.toString());
-
-            const DAI_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance4 = (await DAI_ERC20.balanceOf(ACCOUNT));
-            console.log("4. Getting the balance of DAI: "+balance4.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
         }); 
         // -------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [30%, 20%, 45%, 25%] (% > 1000)", async ()=>{
@@ -404,12 +449,17 @@ describe("Transaction Router UNISWAP", ()=>{
                     [3000, 2000, 4500, 2500], // [30%, 20%, 45%, 25%]
                     overrides
                 )).to.be.reverted;
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.002"));
+            
+        });
+        
+        after(async ()=>{
+            // This function is declared at the end.
+            await restartFork();
         });
     });
 });
 
-const restartFork = async ()=>{
+async function restartFork (){
      /* This will restart the forking network at each test to a better calculate of tokens amounts and ETH (fee) obtained. This will
         REALLY SLOOW DOWN the test :( (and I wrote several tests), but it can be checking specifily the amount of tokens 
         obtained (that will be printed) with some prices in exchanges ETH/Token. 
@@ -420,7 +470,19 @@ const restartFork = async ()=>{
             forking: {
             jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
             blockNumber: 12391206
+            // Remember change this if you wanna try other block
             }
         }]
     });
 };
+// Print the results. Parameters: 1. Data from API, 2. Token Addresses, 3. Amount of token types
+async function printResult(_datas, _addresses, _amountTypes){
+    for(let i = 0; i< _amountTypes; i++){
+        let decimals = _datas[i].toToken.decimals;
+        let tokenSymbol = _datas[i].toToken.symbol;
+        decimals = Math.pow(10,(decimals));
+        const Token_ERC20 = await ethers.getContractAt("IERC20", _addresses[i]);
+        const balance = (await Token_ERC20.balanceOf(ACCOUNT));
+        console.log(`${i==0 ? "\n" : "" }${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
+    }
+}
