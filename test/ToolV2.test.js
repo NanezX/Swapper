@@ -79,7 +79,7 @@ describe("*** Transaction: Tool V2", ()=>{
                 response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
                 tokenData[i] = data;
-                dexs[i] =false;
+                dexs[i] =setDex(data);
             }
 
             let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
@@ -118,7 +118,7 @@ describe("*** Transaction: Tool V2", ()=>{
                 response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
                 tokenData[i] = data;
-                dexs[i] =false;
+                dexs[i] =setDex(data);
             }
 
             let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
@@ -155,7 +155,7 @@ describe("*** Transaction: Tool V2", ()=>{
                 response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
                 tokenData[i] = data;
-                dexs[i] =false;
+                dexs[i] =setDex(data);
             }
 
             let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
@@ -186,7 +186,7 @@ describe("*** Transaction: Tool V2", ()=>{
                 response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
                 data = await response.json();
                 tokenData[i] = data;
-                dexs[i] =false;
+                dexs[i] =setDex(data);
             }
 
             let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
@@ -203,16 +203,24 @@ describe("*** Transaction: Tool V2", ()=>{
     });
 
 });
-function setDex(_name){
+function setDex(_data){
     // Actually, i set ALL in "false" for testing only Balancer, but ill change later
-    if (_name == 'UNISWAP_V2'){
+
+    const name = _data.protocols[0][1][0].name;
+    if (name == 'UNISWAP_V2'){
         // Return true, this will be Uniswap
         return true; 
     }else{
         // Return false, because i only set Uniswap and Balancer as Protocols
         return false;
     }
+
+    // Uncommet the conditional if you wanna choose between Uniswap2 and Balancer
+  /*
+    return false;
+  */
 }
+
 // Print the results. Parameters: 1. Data from API, 2. Token Addresses, 3. Amount of token types
 async function printResult(_datas, _addresses, _amountTypes){
     for(let i = 0; i< _amountTypes; i++){
