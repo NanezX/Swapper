@@ -72,11 +72,6 @@
   },
   "proxies": [
     {
-      "address": "0x851356ae760d987E095750cCeb3bC6014560891C",
-      "kind": "transparent",
-      "txHash": "0x55bec24717e4c8a1bc6b2a1ab31d914df36936294df5b54404a6646e8ea1dad3"
-    },
-    {
       "address": "0xf5059a5D33d5853360D16C683c16e67980206f36",
       "kind": "transparent",
       "txHash": "0xf39b6639cd8d1cf8f180f37cd5c17afdc35d671697a953920b46b445a2d9ee3a"
@@ -155,6 +150,11 @@
       "address": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
       "kind": "transparent",
       "txHash": "0x2ca8c3a8ede7a4ed7f44a37c896e3c9b066c5714752a0b80288eaef7862f9746"
+    },
+    {
+      "address": "0x851356ae760d987E095750cCeb3bC6014560891C",
+      "kind": "transparent",
+      "txHash": "0x55bec24717e4c8a1bc6b2a1ab31d914df36936294df5b54404a6646e8ea1dad3"
     }
   ],
   "admin": {

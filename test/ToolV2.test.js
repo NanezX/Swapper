@@ -169,6 +169,37 @@ describe("*** Transaction: Tool V2", ()=>{
             await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("       Gas Used:", (tx.gasUsed).toString());
         });
+    // -----------------------------------------------
+        it("Swapping to 25.7% UNI, 40.1% DAI and 34.2% LINK", async ()=>{
+            const tokenAddress = [UNI_ADDRESS, DAI_ADDRESS, LINK_ADDRESS];
+            const tokenPercentage = [2570, 4010, 3420]; // [25.7%, 40.1%, 34.2%]
+            const dexs = new Array(amountTypestokens);
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
+            };
+            
+            // Checking and choosing between Uniswap and Balancer.
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+                dexs[i] =false;
+            }
+
+            let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
+                tokenAddress,
+                tokenPercentage,
+                dexs,
+                overrides
+            ); 
+            tx = await tx.wait();  
+
+            await printResult(tokenData, tokenAddress, amountTypestokens);
+            console.log("       Gas Used:", (tx.gasUsed).toString());
+        });
     });
 
 });
