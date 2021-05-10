@@ -37,11 +37,8 @@ contract ToolV1 is Initializable{
                 path[0] = uniswapRouter.WETH(); 
                 path[1] = AddressesTokensOut[i];
 
-                // Calculating % of Eth to send on this iteration. (Amount available * percentage that is requested) / Base percent
-                uint amountInETH = (amountETH * percentageTokens[i])/10000;
-
                 // make the exchange
-                uniswapRouter.swapExactETHForTokens{value:  amountInETH}(
+                uniswapRouter.swapExactETHForTokens{value:  (amountETH * percentageTokens[i])/10000}(
                     1,
                     path, 
                     msg.sender, 
