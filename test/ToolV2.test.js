@@ -13,7 +13,7 @@ const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account wi
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
 const ALCHEMY_KEY = "7rjyfJ9o5dWSND5dUhl1sfFjQpG24BlV";
 
-describe("Transaction v2", ()=>{
+describe("Transaction: Tool V2", ()=>{
     let ToolV1;
     let ToolV2;
     let instanceToolV1;
@@ -25,7 +25,7 @@ describe("Transaction v2", ()=>{
     let response;
     let data;
     let urlBase = `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&`;
-    let amountTypestokens;
+    let amountTypestokens=1;
     
 
     beforeEach(async ()=>{ 
@@ -61,25 +61,27 @@ describe("Transaction v2", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n *-* CONTEXT: Checking between two DEXs [Uniswap V2 and Balancer]", ()=>{
+    describe("\n *-* CONTEXT: ONE token - Checking between Uniswap V2 and Balancer", ()=>{
 // -----------------------------------------------
-        amountTypestokens=1;
-        it("Using the api with 1 token", async ()=>{
-            // Arrays
+        it("Swapping to DAI", async ()=>{
             const tokenAddress = [DAI_ADDRESS];
             const tokenPercentage = [10000];
             const dexs = new Array(amountTypestokens);
+            const tokenData = new Array(amountTypestokens);
 
-            let amountETH = ethers.utils.parseEther("1");
-            // Checking and choosing between Uniswap and Balancer.
-            for(let i=0; i< amountTypestokens;i++){
-                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${ethers.utils.parseEther("0.999")}&protocols=UNISWAP_V2,BALANCER,WETH`);
-                data = await response.json();
-                dexs[i] =setDex(data);
-            }
-            let overrides = { 
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
                 value: amountETH,
             };
+            
+            // Checking and choosing between Uniswap and Balancer.
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+                dexs[i] =false;
+            }
+
             let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
                 tokenAddress,
                 tokenPercentage,
@@ -88,27 +90,106 @@ describe("Transaction v2", ()=>{
             ); 
             tx = await tx.wait();  
 
-            const USDT_ERC20 = await ethers.getContractAt("IERC20", DAI_ADDRESS);
-            const balance = (await USDT_ERC20.balanceOf(ACCOUNT));
-            console.log("\n1. Getting the balance of DAI: "+balance.toString());
-
+            await printResult(tokenData, tokenAddress, amountTypestokens);
             console.log("Gas Used:", (tx.gasUsed).toString());
-
-            expect(await signerALT.getBalance()).to.equal(ethers.utils.parseEther("0.001"));
-
         });
 
         
     });
 
+    describe("\n *-* CONTEXT: TWO tokens - Checking between Uniswap V2 and Balancer", ()=>{
+        before(async ()=>{
+            amountTypestokens++;
+        });
+    // -----------------------------------------------
+        it("Swapping to 40% DAI and 60% LINK", async ()=>{
+            const tokenAddress = [DAI_ADDRESS, LINK_ADDRESS];
+            const tokenPercentage = [4000, 6000]; // [40%, 60%]
+            const dexs = new Array(amountTypestokens);
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
+            };
+            
+            // Checking and choosing between Uniswap and Balancer.
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+                dexs[i] =false;
+            }
+
+            let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
+                tokenAddress,
+                tokenPercentage,
+                dexs,
+                overrides
+            ); 
+            tx = await tx.wait();  
+
+            await printResult(tokenData, tokenAddress, amountTypestokens);
+            console.log("Gas Used:", (tx.gasUsed).toString());
+        });
+    });
+
+    describe("\n *-* CONTEXT: THEE tokens - Checking between Uniswap V2 and Balancer", ()=>{
+        before(async ()=>{
+            amountTypestokens++;
+        });
+    // -----------------------------------------------
+        it("Swapping to 27% DAI, 33% LINK and 40% UNI", async ()=>{
+            const tokenAddress = [DAI_ADDRESS, LINK_ADDRESS, UNI_ADDRESS];
+            const tokenPercentage = [2700, 3300, 4000]; // [27%, 33%, 40%]
+            const dexs = new Array(amountTypestokens);
+            const tokenData = new Array(amountTypestokens);
+
+            const amountETH = ethers.utils.parseEther("1");
+            const overrides = { 
+                value: amountETH,
+            };
+            
+            // Checking and choosing between Uniswap and Balancer.
+            for(let i=0; i< amountTypestokens;i++){
+                response = await fetch(`${urlBase}toTokenAddress=${tokenAddress[i]}&amount=${amountETH}&protocols=UNISWAP_V2,BALANCER,WETH`);
+                data = await response.json();
+                tokenData[i] = data;
+                dexs[i] =false;
+            }
+
+            let tx = await toolUpgradedV2.connect(signer).swapETHForTokens(
+                tokenAddress,
+                tokenPercentage,
+                dexs,
+                overrides
+            ); 
+            tx = await tx.wait();  
+
+            await printResult(tokenData, tokenAddress, amountTypestokens);
+            console.log("Gas Used:", (tx.gasUsed).toString());
+        });
+    });
+
 });
-function setDex(_data){
-    if (_data.protocols[0][1][0].name == 'UNISWAP_V2'){
+function setDex(_name){
+    if (_name == 'UNISWAP_V2'){
         // Return true, this will be Uniswap
         return true; 
     }else{
         // Return false, because i only set Uniswap and Balancer as Protocols
         return false;
+    }
+}
+// Print the results. Parameters: 1. Data from API, 2. Token Addresses, 3. Amount of token types
+async function printResult(_datas, _addresses, _amountTypes){
+    for(let i = 0; i< _amountTypes; i++){
+        let decimals = _datas[i].toToken.decimals;
+        let tokenSymbol = _datas[i].toToken.symbol;
+        decimals = Math.pow(10,(decimals));
+        const Token_ERC20 = await ethers.getContractAt("IERC20", _addresses[i]);
+        const balance = (await Token_ERC20.balanceOf(ACCOUNT));
+        console.log(`${i==0 ? "\n" : "" }${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
     }
 }
 

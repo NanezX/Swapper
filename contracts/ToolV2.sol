@@ -37,6 +37,7 @@ contract ToolV2 is Initializable{
 
         for (uint i=0; i < AddressesTokensOut.length; i++ ){
             uint ETHToUse = (amountETH * percentageTokens[i])/10000;
+
             if(dex[i]){
                 console.log("Uniswap");
                 _swapFromUniswap(uniswapRouter, ETHToUse, AddressesTokensOut[i]);
