@@ -15,15 +15,9 @@ contract ToolV1 is Initializable{
     function swapETHForTokens (
         address[] memory AddressesTokensOut, // Token addresses that are requested 
         uint[] memory percentageTokens    // Token Percentages that are requested 
-<<<<<<< HEAD
-       ) 
-       external 
-       payable {
-=======
     ) 
     external 
     payable {
->>>>>>> toolV2
             require(msg.value > 0);
             uint addIt;
             for(uint i=0; i < percentageTokens.length; i++ ){
@@ -43,16 +37,8 @@ contract ToolV1 is Initializable{
                 path[0] = uniswapRouter.WETH(); 
                 path[1] = AddressesTokensOut[i];
 
-<<<<<<< HEAD
                 // make the exchange
                 uniswapRouter.swapExactETHForTokens{value:  (amountETH * percentageTokens[i])/10000}(
-=======
-                // Calculating % of Eth to send on this iteration. (Amount available * percentage that is requested) / Base percent
-                uint amountInETH = (amountETH * percentageTokens[i])/10000;
-
-                // make the exchange
-                uniswapRouter.swapExactETHForTokens{value:  amountInETH}(
->>>>>>> toolV2
                     1,
                     path, 
                     msg.sender, 

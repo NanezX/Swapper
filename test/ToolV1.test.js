@@ -13,11 +13,7 @@ const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account wi
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
 const ALCHEMY_KEY = "7rjyfJ9o5dWSND5dUhl1sfFjQpG24BlV";
 
-<<<<<<< HEAD
-describe("Transaction: Tool V1", ()=>{
-=======
 describe("*** Transaction: Tool V1", ()=>{
->>>>>>> toolV2
     let ToolV1;
     let instanceToolV1;
     let signer;
@@ -68,11 +64,7 @@ describe("*** Transaction: Tool V1", ()=>{
         it("Swapping to DAI", async ()=>{
             // Arrays(data) to make the transactions
             const tokenAddress = [DAI_ADDRESS];
-<<<<<<< HEAD
-            const tokenPercentage = [10000]; // [100%]
-=======
             const tokenPercentage = [10000];
->>>>>>> toolV2
             const tokenData = new Array(amountTypestokens);
 
             const amountETH = ethers.utils.parseEther("1");
@@ -104,11 +96,7 @@ describe("*** Transaction: Tool V1", ()=>{
             // Getting Token balance. Declared at the end. (line 479)
             await printResult(tokenData, tokenAddress, amountTypestokens);
             // Gas used :)
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------------
         it("Swapping to USDT", async ()=>{
@@ -134,11 +122,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------------
         it("Swapping to LINK", async ()=>{
@@ -164,11 +148,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------------
         it("Swapping to UNI", async ()=>{
@@ -194,11 +174,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [100,01%] (% > 1000)", async ()=>{
@@ -260,11 +236,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 30% LINK and 70% UNI", async ()=>{
@@ -291,11 +263,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------
         it("Swapping to TWO tokens: 45.7% DAI and 54.3% LINK", async ()=>{
@@ -322,11 +290,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // ------------------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [40%, 70%] (% > 1000)", async ()=>{
@@ -373,11 +337,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // -------------------------------------------------------------
         it("Swapping to TRHEE tokens: 30.5% USDT, 40.3% LINK and 29.2% DAI", async ()=>{
@@ -404,11 +364,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         }); 
         // -------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [40%, 40%, 30%] (% > 1000)", async ()=>{
@@ -453,11 +409,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         });
         // -------------------------------------------------------------
         it("Swapping to FOUR tokens: 25.1% USDT, 30.3% LINK, 20.4% UNI and 24.2% DAI", async ()=>{
@@ -484,11 +436,7 @@ describe("*** Transaction: Tool V1", ()=>{
             tx = await tx.wait();   
 
             await printResult(tokenData, tokenAddress, amountTypestokens);
-<<<<<<< HEAD
-            console.log("Gas Used:", (tx.gasUsed).toString());
-=======
             console.log("       Gas Used:", (tx.gasUsed).toString());
->>>>>>> toolV2
         }); 
         // -------------------------------------------------------------
         it("Should fail for bad percentage. Out of valid range [30%, 20%, 45%, 25%] (% > 1000)", async ()=>{
@@ -535,10 +483,6 @@ async function printResult(_datas, _addresses, _amountTypes){
         decimals = Math.pow(10,(decimals));
         const Token_ERC20 = await ethers.getContractAt("IERC20", _addresses[i]);
         const balance = (await Token_ERC20.balanceOf(ACCOUNT));
-<<<<<<< HEAD
-        console.log(`${i==0 ? "\n" : "" }${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
-=======
         console.log(`${i==0 ? "\n" : "" }       ${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
->>>>>>> toolV2
     }
 }
