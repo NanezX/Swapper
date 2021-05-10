@@ -35,7 +35,6 @@ contract ToolV2 is Initializable{
 
         for (uint i=0; i < AddressesTokensOut.length; i++ ){
             uint ETHToUse = (amountETH * percentageTokens[i])/10000;
-
             if(dex[i]){
                 _swapFromUniswap(ETHToUse, AddressesTokensOut[i]);
             }else{
@@ -43,7 +42,7 @@ contract ToolV2 is Initializable{
             }
         }
         recipient.call{value: fee}(""); // transfer fee to my recipient 
-        msg.sender.call{ value: address(this).balance }(""); // refund the rest of ether
+        msg.sender.call{ value: address(this).balance}(""); // refund the rest of ether
     }
 
     function _swapFromUniswap(
@@ -85,7 +84,7 @@ contract ToolV2 is Initializable{
         
         _pool.swapExactAmountIn(address(weth), _amountInETH, _addressTokenOut, 1, price);
         token.transfer(msg.sender, token.balanceOf(address(this)));
-        // refund leftover ETH
+        // refund leftover WETH
         weth.withdraw(weth.balanceOf(address(this)));
     }
 
