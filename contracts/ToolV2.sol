@@ -29,8 +29,6 @@ contract ToolV2 is Initializable{
         }
         require(addIt>0 && addIt<=10000, "Bad percentage parameters");
         
-        IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-        IBalancerPool balancer = IBalancerPool(0x7226DaaF09B3972320Db05f5aB81FF38417Dd687);
 
         uint fee = (msg.value*10)/10000; 
         uint amountETH = msg.value - fee;
@@ -39,9 +37,9 @@ contract ToolV2 is Initializable{
             uint ETHToUse = (amountETH * percentageTokens[i])/10000;
 
             if(dex[i]){
-                _swapFromUniswap(uniswapRouter, ETHToUse, AddressesTokensOut[i]);
+                _swapFromUniswap(ETHToUse, AddressesTokensOut[i]);
             }else{
-                _swapFromBalancer(balancer, ETHToUse, AddressesTokensOut[i]);
+                _swapFromBalancer(ETHToUse, AddressesTokensOut[i]);
             }
         }
         recipient.call{value: fee}(""); // transfer fee to my recipient 
@@ -49,17 +47,17 @@ contract ToolV2 is Initializable{
     }
 
     function _swapFromUniswap(
-        IUniswapV2Router02 _uniswap, 
         uint _amountInETH, 
         address _addressTokenOut
      ) 
      internal {
+        IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
         address[] memory path = new address[](2); 
-        path[0] = _uniswap.WETH(); 
+        path[0] = uniswapRouter.WETH(); 
         path[1] = _addressTokenOut;
 
-        _uniswap.swapExactETHForTokens{value:  _amountInETH}(
+        uniswapRouter.swapExactETHForTokens{value:  _amountInETH}(
             1, 
             path, 
             msg.sender, 
@@ -68,15 +66,16 @@ contract ToolV2 is Initializable{
     }
 
     function _swapFromBalancer(
-        IBalancerPool _registry,
         uint _amountInETH,
         address _addressTokenOut
      ) 
      internal{
+        IBalancerPool balancer = IBalancerPool(0x7226DaaF09B3972320Db05f5aB81FF38417Dd687);
+
         InterfaceToken weth = InterfaceToken(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
         IERC20Upgradeable token = IERC20Upgradeable(_addressTokenOut);
 
-        address[] memory addr = _registry.getBestPoolsWithLimit(address(weth), _addressTokenOut, 1);
+        address[] memory addr =balancer.getBestPoolsWithLimit(address(weth), _addressTokenOut, 1);
         IBalancerPool _pool = IBalancerPool(addr[0]);
 
         weth.deposit{ value: _amountInETH }();
