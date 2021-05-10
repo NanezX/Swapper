@@ -204,6 +204,7 @@ describe("*** Transaction: Tool V2", ()=>{
 
 });
 function setDex(_name){
+    // Actually, i set ALL in "false" for testing only Balancer, but ill change later
     if (_name == 'UNISWAP_V2'){
         // Return true, this will be Uniswap
         return true; 
