@@ -60,7 +60,7 @@ describe("*** Transaction: Tool V1", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to one token", ()=>{
+    describe("\n    * Swapping from ETH to one token", ()=>{
         it("Swapping to DAI", async ()=>{
             // Arrays(data) to make the transactions
             const tokenAddress = [DAI_ADDRESS];
@@ -206,7 +206,7 @@ describe("*** Transaction: Tool V1", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to 2 tokens", ()=>{
+    describe("\n    * Swapping from ETH to 2 tokens", ()=>{
         before(async ()=>{
             // This function is declared at the end.
             await restartFork();
@@ -308,7 +308,7 @@ describe("*** Transaction: Tool V1", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to 3 tokens", ()=>{
+    describe("\n    * Swapping from ETH to 3 tokens", ()=>{
         before(async ()=>{
             await restartFork();
             amountTypestokens++;
@@ -380,7 +380,7 @@ describe("*** Transaction: Tool V1", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to 4 tokens", ()=>{
+    describe("\n    * Swapping from ETH to 4 tokens", ()=>{
         before(async ()=>{
             await restartFork();
             amountTypestokens++;

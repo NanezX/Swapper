@@ -59,7 +59,7 @@ describe("*** Transaction: Tool V2", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n - CONTEXT: ONE token - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n    * Swapping from ETH to 1 tokens - Checking between Uniswap V2 and Balancer", ()=>{
 // -----------------------------------------------
         it("Swapping to DAI", async ()=>{
             const tokenAddress = [DAI_ADDRESS];
@@ -95,7 +95,7 @@ describe("*** Transaction: Tool V2", ()=>{
         
     });
 
-    describe("\n - CONTEXT: TWO tokens - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n    * Swapping from ETH to 2 tokens - Checking between Uniswap V2 and Balancer", ()=>{
         before(async ()=>{
             amountTypestokens++;
         });
@@ -132,7 +132,7 @@ describe("*** Transaction: Tool V2", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: THEE tokens - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n    * Swapping from ETH to 3 tokens - Checking between Uniswap V2 and Balancer", ()=>{
         before(async ()=>{
             amountTypestokens++;
         });
