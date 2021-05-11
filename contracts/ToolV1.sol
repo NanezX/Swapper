@@ -5,7 +5,7 @@ import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "hardhat/console.sol";
 
 contract ToolV1 is Initializable{
-    address payable recipient; // Recipient that get the fees
+    address payable public recipient; // Recipient that get the fees
 
     // Initialize function (as OZ recommend)
     function initialize(address payable _recipient) public initializer {

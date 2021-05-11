@@ -463,7 +463,8 @@ async function restartFork (){
      /* This will restart the forking network at each test to a better calculate of tokens amounts and ETH (fee) obtained. This will
         REALLY SLOOW DOWN the test :( (and I wrote several tests), but it can be checking specifily the amount of tokens 
         obtained (that will be printed) with some prices in exchanges ETH/Token. 
-       -  Remember that will be added in each test since restartFork ONLY is called between "describes" */
+       - Remember that will be added in each test since restartFork ONLY is called between "describes." 
+       - Also remember that the tokens balances still inside the describes butm when the fork mainnet is reset, the balances too.*/
     await hre.network.provider.request({
         method: "hardhat_reset",
         params: [{
