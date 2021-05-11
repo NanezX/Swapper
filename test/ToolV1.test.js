@@ -60,7 +60,7 @@ describe("*** Transaction: Tool V1", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to one token", ()=>{
+    describe("\n    * Swapping from ETH to one token", ()=>{
         it("Swapping to DAI", async ()=>{
             // Arrays(data) to make the transactions
             const tokenAddress = [DAI_ADDRESS];
@@ -206,7 +206,7 @@ describe("*** Transaction: Tool V1", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to 2 tokens", ()=>{
+    describe("\n    * Swapping from ETH to 2 tokens", ()=>{
         before(async ()=>{
             // This function is declared at the end.
             await restartFork();
@@ -308,7 +308,7 @@ describe("*** Transaction: Tool V1", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to 3 tokens", ()=>{
+    describe("\n    * Swapping from ETH to 3 tokens", ()=>{
         before(async ()=>{
             await restartFork();
             amountTypestokens++;
@@ -380,7 +380,7 @@ describe("*** Transaction: Tool V1", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: Swapping from ETH to 4 tokens", ()=>{
+    describe("\n    * Swapping from ETH to 4 tokens", ()=>{
         before(async ()=>{
             await restartFork();
             amountTypestokens++;
@@ -463,7 +463,8 @@ async function restartFork (){
      /* This will restart the forking network at each test to a better calculate of tokens amounts and ETH (fee) obtained. This will
         REALLY SLOOW DOWN the test :( (and I wrote several tests), but it can be checking specifily the amount of tokens 
         obtained (that will be printed) with some prices in exchanges ETH/Token. 
-       -  Remember that will be added in each test since restartFork ONLY is called between "describes" */
+       - Remember that will be added in each test since restartFork ONLY is called between "describes." 
+       - Also remember that the tokens balances still inside the describes butm when the fork mainnet is reset, the balances too.*/
     await hre.network.provider.request({
         method: "hardhat_reset",
         params: [{

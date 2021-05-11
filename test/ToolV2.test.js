@@ -4,14 +4,12 @@ const fetch = require("node-fetch");
 const hre = require("hardhat");
 // A bunch of address tokens
 const DAI_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
-const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const LINK_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 const UNI_ADDRESS = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984";
 const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 const ACCOUNT = "0xbF334f8BD1420a1CbFE15407f73919424934B1B3"; // This account will make transactions
 const altAcc = "0x4Ef88F266D03eC2a3e3e1beb1D77cB9c52c93003"; // This account will receive the fees (recipient address)
-const ALCHEMY_KEY = "7rjyfJ9o5dWSND5dUhl1sfFjQpG24BlV";
 
 describe("*** Transaction: Tool V2", ()=>{
     let ToolV1;
@@ -61,7 +59,7 @@ describe("*** Transaction: Tool V2", ()=>{
         signerALT = await ethers.provider.getSigner(altAcc);
     });
 
-    describe("\n - CONTEXT: ONE token - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n    * Swapping from ETH to 1 tokens - Checking between Uniswap V2 and Balancer", ()=>{
 // -----------------------------------------------
         it("Swapping to DAI", async ()=>{
             const tokenAddress = [DAI_ADDRESS];
@@ -95,7 +93,7 @@ describe("*** Transaction: Tool V2", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: TWO tokens - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n    * Swapping from ETH to 2 tokens - Checking between Uniswap V2 and Balancer", ()=>{
         before(async ()=>{
             amountTypestokens++;
         });
@@ -133,7 +131,7 @@ describe("*** Transaction: Tool V2", ()=>{
         });
     });
 
-    describe("\n - CONTEXT: THEE tokens - Checking between Uniswap V2 and Balancer", ()=>{
+    describe("\n    * Swapping from ETH to 3 tokens - Checking between Uniswap V2 and Balancer", ()=>{
         before(async ()=>{
             amountTypestokens++;
         });
@@ -215,7 +213,7 @@ function setDex(_data){
         return false;
     }
 
-    // Uncommet the conditional if you wanna choose between Uniswap2 and Balancer
+    // Comment/Uncommet the conditional if you wanna choose between Uniswap2 and Balancer
   /*
     return false;
   */
@@ -232,5 +230,4 @@ async function printResult(_datas, _addresses, _amountTypes){
         const balance = (await Token_ERC20.balanceOf(ACCOUNT));
         console.log(`${i==0 ? "\n" : "" }       ${i+1}. Getting the balance of ${tokenSymbol}: ${(balance.toString()) / decimals}`);
     }
-
 }
